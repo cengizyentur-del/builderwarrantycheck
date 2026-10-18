@@ -375,5 +375,29 @@ body{padding-bottom:82px}
     document.getElementById('resetForm').addEventListener('click',()=>{form.reset();confirmation.classList.remove('show');form.style.display='block';syncBookingPackage();document.getElementById('name').focus()});
   </script>
 <div class="sticky-cta" role="navigation" aria-label="Quick actions"><a class="btn btn-ghost" href="tel:+12102386505">Call (210) 238-6505</a><a class="btn btn-primary" href="#booking">Book Inspection</a></div>
+<script>
+(function(){
+  var track=document.querySelector('.review-grid');
+  if(!track)return;
+  if(window.matchMedia('(prefers-reduced-motion: reduce)').matches)return;
+  var timer=null,idle=null;
+  function step(){
+    var c=track.querySelector('.review-card');
+    return c?c.getBoundingClientRect().width+20:340;
+  }
+  function go(){
+    var max=track.scrollWidth-track.clientWidth-8;
+    if(track.scrollLeft>=max){track.scrollTo({left:0,behavior:'smooth'});}
+    else{track.scrollBy({left:step(),behavior:'smooth'});}
+  }
+  function start(){stop();timer=setInterval(go,5000);}
+  function stop(){if(timer){clearInterval(timer);timer=null;}}
+  ['pointerdown','touchstart','wheel'].forEach(function(e){
+    track.addEventListener(e,function(){stop();clearTimeout(idle);idle=setTimeout(start,8000);},{passive:true});
+  });
+  document.addEventListener('visibilitychange',function(){if(document.hidden){stop();}else{start();}});
+  start();
+})();
+</script>
 </body>
 </html>
