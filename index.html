@@ -72,6 +72,7 @@
 .faq-item summary::after{content:"+";color:var(--amber);font-size:1.4rem;font-weight:400;flex-shrink:0}
 .faq-item[open] summary::after{content:"\2013"}
 .faq-item p{margin:0 0 18px;color:var(--muted);line-height:1.7;max-width:640px}
+.opt{color:var(--muted);font-weight:400;font-size:.85em}
 /* Sticky mobile CTA bar */
 .sticky-cta{display:none}
 @media(max-width:720px){
@@ -306,7 +307,7 @@ body{padding-bottom:82px}
 
     <section class="booking section" id="booking">
       <div class="wrap booking-grid"><div class="booking-aside"><p class="eyebrow">Book your inspection</p><h2>Get ahead of your warranty deadline.</h2><p class="lead">Tell us where you are in your first year. We will use your closing date to understand your timing.</p><p class="lead">Prefer to talk? Call <a href="tel:+12102386505">(210) 238-6505</a>.</p><div class="booking-list"><div><b>01</b> Share your contact details</div><div><b>02</b> Add your home closing date</div><div><b>03</b> Review scheduling options</div></div></div>
-        <div class="form-card"><div class="booking-package" id="bookingPackage" aria-live="polite"><div class="booking-package-label">Selected package</div><div class="booking-package-name" id="bookingPackageName"></div><p class="booking-package-details" id="bookingPackageDetails"></p><div class="booking-package-total" id="bookingPackageTotal"></div></div><form id="bookingForm"><input type="hidden" id="packageSelection" name="packageSelection" /><div class="form-grid"><div class="field"><label for="name">Full name</label><input id="name" name="name" autocomplete="name" required placeholder="Your name" /></div><div class="field"><label for="phone">Phone</label><input id="phone" name="phone" type="tel" autocomplete="tel" required placeholder="(555) 000-0000" /></div><div class="field full"><label for="email">Email</label><input id="email" name="email" type="email" autocomplete="email" required placeholder="you@example.com" /></div><div class="field full"><label for="closing">Home closing date</label><input id="closing" name="closing" type="text" inputmode="numeric" autocomplete="off" required placeholder="MM/DD/YYYY" aria-label="Home closing date" /></div></div><button class="btn btn-primary" type="submit">Prepare Booking Request <span aria-hidden="true">→</span></button><p class="form-note">Your details go straight to our team at info@builderwarrantycheck.com — we reply within one business day.</p></form>
+        <div class="form-card"><div class="booking-package" id="bookingPackage" aria-live="polite"><div class="booking-package-label">Selected package</div><div class="booking-package-name" id="bookingPackageName"></div><p class="booking-package-details" id="bookingPackageDetails"></p><div class="booking-package-total" id="bookingPackageTotal"></div></div><form id="bookingForm"><input type="hidden" id="packageSelection" name="packageSelection" /><div class="form-grid"><div class="field"><label for="name">Full name</label><input id="name" name="name" autocomplete="name" required placeholder="Your name" /></div><div class="field"><label for="phone">Phone</label><input id="phone" name="phone" type="tel" autocomplete="tel" required placeholder="(555) 000-0000" /></div><div class="field full"><label for="email">Email</label><input id="email" name="email" type="email" autocomplete="email" required placeholder="you@example.com" /></div><div class="field full"><label for="closing">Home closing date <span class="opt">(optional)</span></label><input id="closing" name="closing" type="date" autocomplete="off" aria-label="Home closing date" /></div></div><button class="btn btn-primary" type="submit">Prepare Booking Request <span aria-hidden="true">→</span></button><p class="form-note">Your details go straight to our team at info@builderwarrantycheck.com — we reply within one business day.</p></form>
           <div class="confirmation" id="confirmation" role="status"><div><div class="confirmation-icon">✓</div><h3>Thank you, <span id="firstName">homeowner</span>.</h3><p>We received your request and will reply from info@builderwarrantycheck.com within one business day.</p><button class="reset-btn" id="resetForm" type="button">Start over</button></div></div>
         </div>
       </div>
@@ -336,6 +337,10 @@ body{padding-bottom:82px}
       return {items,total:items.reduce((sum,item)=>sum+item.price,0)};
     }
 
+    function packageSummaryString(){
+      const details=packageDetails();
+      return details.items.map(item=>item.name+' ('+money(item.price)+')').join(' + ')+' — Estimated total '+money(details.total);
+    }
     function syncBookingPackage(){
       const card=document.getElementById('bookingPackage');
       if(!card.classList.contains('show'))return;
@@ -344,7 +349,7 @@ body{padding-bottom:82px}
       document.getElementById('bookingPackageName').textContent=details.items[0].name;
       document.getElementById('bookingPackageDetails').textContent=extras.length?'Add-ons: '+extras.join(', '):'No additional add-ons selected.';
       document.getElementById('bookingPackageTotal').textContent='Estimated total: '+money(details.total);
-      document.getElementById('packageSelection').value=details.items.map(item=>item.name+' ('+money(item.price)+')').join(' + ')+' — Estimated total '+money(details.total);
+      document.getElementById('packageSelection').value=packageSummaryString();
     }
 
     function renderPackage(){
@@ -371,7 +376,7 @@ body{padding-bottom:82px}
     renderPackage();
 
     const form=document.getElementById('bookingForm'),confirmation=document.getElementById('confirmation');
-    form.addEventListener('submit',async e=>{e.preventDefault();if(!form.reportValidity())return;const btn=form.querySelector('button[type="submit"]');const origBtn=btn.innerHTML;btn.disabled=true;btn.textContent='Sending\u2026';try{const payload={name:document.getElementById('name').value.trim(),phone:document.getElementById('phone').value.trim(),email:document.getElementById('email').value.trim(),closingDate:document.getElementById('closing').value.trim(),package:document.getElementById('packageSelection').value||'(not selected)',_subject:'New booking request \u2014 builderwarrantycheck.com',_honey:'',_captcha:'false'};const res=await fetch('https://formsubmit.co/ajax/info@builderwarrantycheck.com',{method:'POST',headers:{'Content-Type':'application/json','Accept':'application/json'},body:JSON.stringify(payload)});if(!res.ok)throw new Error('send failed');const n=payload.name.split(/\s+/)[0];document.getElementById('firstName').textContent=n||'homeowner';form.style.display='none';confirmation.classList.add('show');confirmation.scrollIntoView({behavior:'smooth',block:'center'})}catch(err){btn.disabled=false;btn.innerHTML=origBtn;alert('Sending failed right now \u2014 please email us directly at info@builderwarrantycheck.com and we\u2019ll take care of you.')}});
+    form.addEventListener('submit',async e=>{e.preventDefault();if(!form.reportValidity())return;const btn=form.querySelector('button[type="submit"]');const origBtn=btn.innerHTML;btn.disabled=true;btn.textContent='Sending\u2026';try{const payload={name:document.getElementById('name').value.trim(),phone:document.getElementById('phone').value.trim(),email:document.getElementById('email').value.trim(),closingDate:(function(){var v=document.getElementById('closing').value.trim();if(!v)return '(not provided)';var p=v.split('-');return p.length===3?p[1]+'/'+p[2]+'/'+p[0]:v;})(),package:document.getElementById('packageSelection').value||packageSummaryString(),_subject:'New booking request \u2014 builderwarrantycheck.com',_honey:'',_captcha:'false'};const res=await fetch('https://formsubmit.co/ajax/info@builderwarrantycheck.com',{method:'POST',headers:{'Content-Type':'application/json','Accept':'application/json'},body:JSON.stringify(payload)});if(!res.ok)throw new Error('send failed');const n=payload.name.split(/\s+/)[0];document.getElementById('firstName').textContent=n||'homeowner';form.style.display='none';confirmation.classList.add('show');confirmation.scrollIntoView({behavior:'smooth',block:'center'})}catch(err){btn.disabled=false;btn.innerHTML=origBtn;alert('Sending failed right now \u2014 please email us directly at info@builderwarrantycheck.com and we\u2019ll take care of you.')}});
     document.getElementById('resetForm').addEventListener('click',()=>{form.reset();confirmation.classList.remove('show');form.style.display='block';syncBookingPackage();document.getElementById('name').focus()});
   </script>
 <div class="sticky-cta" role="navigation" aria-label="Quick actions"><a class="btn btn-ghost" href="tel:+12102386505">Call (210) 238-6505</a><a class="btn btn-primary" href="#booking">Book Inspection</a></div>
